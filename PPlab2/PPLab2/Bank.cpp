@@ -1,19 +1,30 @@
 #include "stdafx.h"
 #include "Bank.h"
 
-CBank::CBank()
+CBank::CBank(PRIMITIVE_TYPE type) : m_syncPrimitives(std::make_shared<Primitives>()), m_totalBalance(0)
 {
-	m_clients = std::vector<CBankClient>();
-	m_totalBalance = 0;
+	m_syncPrimitives->type = type;
 }
 
+CBank::~CBank()
+{
+	CloseHandle(m_syncPrimitives->hMutex);
+	CloseHandle(m_syncPrimitives->hSemaphore);
+	CloseHandle(m_syncPrimitives->hEvent);
+	DeleteCriticalSection(&m_syncPrimitives->critical_section);
+	for (auto &it : m_clients)
+	{
+		delete &it;
+	}
+}
 
 CBankClient* CBank::CreateClient()
 {
-	unsigned clientId = unsigned(m_clients.size());
-	CBankClient* client = new CBankClient(this, clientId);
+	unsigned int clientId = unsigned(m_clients.size());
+	CBankClient* client = new CBankClient(this, clientId, m_syncPrimitives.get());
 	m_clients.push_back(*client);
 	return client;
+
 }
 
 HANDLE * CBank::GetClientsHandles() const
@@ -28,7 +39,10 @@ HANDLE * CBank::GetClientsHandles() const
 	return handles.data();
 }
 
-
+size_t CBank::GetClientsCount() const
+{
+	return m_clients.size();
+}
 
 void CBank::UpdateClientBalance(CBankClient &client, int value)
 {
