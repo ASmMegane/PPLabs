@@ -57,20 +57,18 @@ void CBank::UpdateClientBalance(CBankClient &client, int value)
 		<< " and initiates setting total balance to " << totalBalance
 		<< ". Must be: " << (totalBalance + value) << "." << std::endl;
 
-	bool isAccepteble = false;
 	if (totalBalance + value > 0)
 	{
 		SetTotalBalance(GetTotalBalance() + value);
 		std::cout << "Total Balance = " << GetTotalBalance() << std::endl;
-		isAccepteble = true;
+		if (GetTotalBalance() < 0 || totalBalance != GetTotalBalance() - value)
+		{
+			std::cout << "Error!!!!!!!!" << std::endl;
+		}
 	}
 	else
 	{
 		std::cout << "Client can not cash out" << std::endl;
-	}
-	if (isAccepteble && (GetTotalBalance() < 0 || totalBalance != GetTotalBalance() - value))
-	{
-		std::cout << "Error!!!!!!!!" << std::endl;
 	}
 }
 

@@ -10,7 +10,7 @@ class CBankClient
 {
 public:
 	unsigned int GetId();
-	~CBankClient() = default;
+	~CBankClient() {};
 
 private:
 	CBankClient(CBank *bank, unsigned int id, Primitives *syncPrimitives);
@@ -20,7 +20,7 @@ private:
 
 	static DWORD WINAPI ThreadFunction(LPVOID lpParam);
 
-	static std::function<void(CBankClient*)> GetSyncMethodFunc(PRIMITIVE_TYPE type);
+	static void ChoiceSyncMethod(PRIMITIVE_TYPE type, CBankClient *client);
 
 	friend CBank;
 

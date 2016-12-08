@@ -13,53 +13,36 @@ unsigned CBankClient::GetId()
 	return m_id;
 }
 
-std::function<void(CBankClient*)> CBankClient::GetSyncMethodFunc(PRIMITIVE_TYPE type)
+void CBankClient::ChoiceSyncMethod(PRIMITIVE_TYPE type, CBankClient *client)
 { 
-	std::function<void(CBankClient*)> func;
 	switch (type)
 	{
 	case PRIMITIVE_TYPE::CRITICAL_SECTION:
-		func = [](CBankClient * client)
-		{
-			EnterCriticalSection(&client->m_syncPrimitives->critical_section);
-			client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
-			LeaveCriticalSection(&client->m_syncPrimitives->critical_section);
-		};
+		EnterCriticalSection(&client->m_syncPrimitives->critical_section);
+		client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
+		LeaveCriticalSection(&client->m_syncPrimitives->critical_section);
 		break;
 	case PRIMITIVE_TYPE::SEMAPHORE:
-		func = [](CBankClient * client)
-		{
-			WaitForSingleObject(client->m_syncPrimitives->hSemaphore, INFINITE);
-			client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
-			ReleaseSemaphore(client->m_syncPrimitives->hSemaphore, 1, NULL);
-		};
+		WaitForSingleObject(client->m_syncPrimitives->hSemaphore, INFINITE);
+		client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
+		ReleaseSemaphore(client->m_syncPrimitives->hSemaphore, 1, NULL);
 		break;
 	case PRIMITIVE_TYPE::MUTEX:
-		func = [](CBankClient * client)
-		{
-			WaitForSingleObject(client->m_syncPrimitives->hMutex, INFINITE);
-			client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
-			ReleaseMutex(client->m_syncPrimitives->hMutex);
-		};
+		WaitForSingleObject(client->m_syncPrimitives->hMutex, INFINITE);
+		client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
+		ReleaseMutex(client->m_syncPrimitives->hMutex);
 		break;
 	case PRIMITIVE_TYPE::EVENT:
-		func = [](CBankClient * client)
-		{
-			WaitForSingleObject(client->m_syncPrimitives->hEvent, INFINITE);
-			client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
-			SetEvent(client->m_syncPrimitives->hEvent);
-		};
+		WaitForSingleObject(client->m_syncPrimitives->hEvent, INFINITE);
+		client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
+		SetEvent(client->m_syncPrimitives->hEvent);
 		break;
 	case PRIMITIVE_TYPE::NO:
-		func = [](CBankClient * client)
-		{
-			client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
-		};
+		client->m_bank->UpdateClientBalance(*client, GetBalanceChangeValue());
 		break;
 	default:
 		break;
 	}
-	return func;
 }
 
 
@@ -72,7 +55,7 @@ DWORD WINAPI CBankClient::ThreadFunction(LPVOID lpParam)
 	while (true)
 	{
 		Sleep(GetSleepDuration(client));
-		GetSyncMethodFunc(client->m_syncPrimitives->type)(client);
+		ChoiceSyncMethod(client->m_syncPrimitives->type, client);
 	}
 	return 0;
 }
