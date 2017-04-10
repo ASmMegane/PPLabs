@@ -41,6 +41,7 @@ std::vector<int> Sort(std::vector<std::vector<int>> const& vec)
 	{
 		std::vector<std::vector<int>> tempVec;
 
+#pragma omp parallel for
 		for (int i = 0; i < int(vector.size()); i += 2)
 		{
 			std::vector<std::vector<int>> result;
@@ -53,6 +54,7 @@ std::vector<int> Sort(std::vector<std::vector<int>> const& vec)
 				result.push_back(Merge(vector[i], vector[i + 1]));
 			}
 
+#pragma omp critical
 			for (auto & value : result)
 			{
 				tempVec.push_back(value);
