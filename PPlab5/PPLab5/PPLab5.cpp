@@ -1,72 +1,97 @@
 #include "stdafx.h"
-#include <vector>
-#include <iostream>
-#include <string>
-#include <iostream>
 
-
-void Separation(std::vector<int> & arr, int startPos, int endPos)
+std::vector<int> Merge(std::vector<int> const& vector1, std::vector<int> const& vector2)
 {
-	std::vector<int> newArr(endPos - startPos + 1);
-	int half = newArr.size() / 2;
-	for (int i = 0; i < half; i++)
+	std::vector<int> resultVec;
+
+	std::vector<int> vec1 = vector1;
+	std::vector<int> vec2 = vector2;
+	
+	while (!vec1.empty() && !vec2.empty())
 	{
-		if (arr[startPos + i * 2] > arr[startPos + i * 2 + 1])
-			std::swap(arr[startPos + i * 2], arr[startPos + i * 2 + 1]);
-		newArr[i] = arr[startPos + i * 2];
-		newArr[i + half] = arr[startPos + i * 2 + 1];
+		if (vec1[0] > vec2[0])
+		{
+			resultVec.push_back(vec2[0]);
+			vec2.erase(vec2.begin());
+		}
+		else
+		{
+			resultVec.push_back(vec1[0]);
+			vec1.erase(vec1.begin());
+		}
+	}
+	while (!vec1.empty())
+	{
+		resultVec.push_back(vec1[0]);
+		vec1.erase(vec1.begin());
+	}
+	while (!vec2.empty())
+	{
+		resultVec.push_back(vec2[0]);
+		vec2.erase(vec2.begin());
+	}
+	return resultVec;
+}
+
+std::vector<int> Sort(std::vector<std::vector<int>> const& vec)
+{
+	auto vector = vec;
+
+	while (vector.size() > 1)
+	{
+		std::vector<std::vector<int>> tempVec;
+
+		for (int i = 0; i < int(vector.size()); i += 2)
+		{
+			std::vector<std::vector<int>> result;
+			if (i + 1 >= vector.size())
+			{
+				result.push_back(vector[i]);
+			}
+			else 
+			{
+				result.push_back(Merge(vector[i], vector[i + 1]));
+			}
+
+			for (auto & value : result)
+			{
+				tempVec.push_back(value);
+			}
+		}
+		vector = tempVec;
+	}
+	return vector[0];
+}
+
+
+int main(int argc, char * argv[])
+{
+
+	if (argc < 2)
+		return 1;
+
+	std::ifstream inFile(argv[1]);
+
+	std::vector<int> arr;
+
+	while (!inFile.eof())
+	{
+		int num;
+		inFile >> num;
+		arr.push_back(num);
 	}
 
-	for (int i = 0; i < newArr.size(); i++)
-		arr[startPos + i] = newArr[i];
-}
-
-void Compexch(int & a, int & b)
-{
-	if (a > b)
-		std::swap(a, b);
-}
-
-void Merge(std::vector<int> & arr, int startPos, int endPos)
-{
-	std::vector<int> newArr(endPos - startPos + 1);
-	int half = (endPos + startPos) / 2;
-	for (int i = 0; i < newArr.size(); i+=2)
+	std::vector<std::vector<int>> vectorForSort;
+	for (auto & elem : arr)
 	{
-		newArr[i] = arr[startPos+ i / 2];
-		newArr[i + 1] = arr[half + i / 2 + 1];
+		vectorForSort.push_back(std::vector<int>());
+		vectorForSort.back().push_back(elem);
 	}
+	auto start = std::chrono::system_clock::now();
+	auto result = Sort(vectorForSort);
+	auto end = std::chrono::system_clock::now();
 
-	for (int i = 0; i < newArr.size(); i++)
-		arr[startPos + i] = newArr[i];
+	std::chrono::duration<double> dif = end - start;
+	std::cout << "Time: " << dif.count() << std::endl;
+	return 0;
 }
-
-void Sort(std::vector<int> & arr, int startPos, int endPos)
-{
-	if (endPos == startPos + 1) 
-		Compexch(arr[startPos], arr[endPos]);
-	if (endPos < startPos + 2)
-		return;
-	int half = (startPos + endPos) / 2;
-	Separation(arr, startPos, endPos);
-
-	Sort(arr, startPos, half);
-	Sort(arr, half + 1, endPos);
-
-	Merge(arr, startPos, endPos);
-
-	for (int i = startPos + 1; i < endPos; i += 2)
-		Compexch(arr[i], arr[i + 1]);
-}
-
-int main()
-{
-	std::vector<int> arr { 9, 8, 1, 6, 7, 4, 0, 2};
-
-	Sort(arr, 0, 7);
-
-	for (int i = 0; i < arr.size(); i++)
-		std::cout << arr[i] << " ";
-    return 0;
-}
-

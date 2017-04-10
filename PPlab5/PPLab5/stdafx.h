@@ -7,8 +7,13 @@
 
 #include "targetver.h"
 
-#include <stdio.h>
-#include <tchar.h>
+#include <stdio.h> 
+#include <tchar.h> 
+#include <vector> 
+#include <fstream> 
+#include <chrono> 
+#include <iostream> 
+#include <omp.h>
 
 
 
